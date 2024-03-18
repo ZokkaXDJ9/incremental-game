@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/incremental-game/static/css/main.e6c13ad2.css",
-    "main.js": "/incremental-game/static/js/main.b49f7e89.js",
+    "main.js": "/incremental-game/static/js/main.c5337cc9.js",
     "index.html": "/incremental-game/index.html",
     "main.e6c13ad2.css.map": "/incremental-game/static/css/main.e6c13ad2.css.map",
-    "main.b49f7e89.js.map": "/incremental-game/static/js/main.b49f7e89.js.map"
+    "main.c5337cc9.js.map": "/incremental-game/static/js/main.c5337cc9.js.map"
   },
   "entrypoints": [
     "static/css/main.e6c13ad2.css",
-    "static/js/main.b49f7e89.js"
+    "static/js/main.c5337cc9.js"
   ]
 }
