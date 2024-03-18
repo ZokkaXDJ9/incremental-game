@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import ProgressBar from './ProgressBar';
-import Tabs from './Tabs';
 import TabContent from './TabContent';
-import unlockNextType from './unlockUtils'; // Import the unlock function
+// import Tabs from './Tabs';
+import unlockNextType from './unlockUtils';
 
 function App() {
   const [points, setPoints] = useState([0]);
-  const [pointsPerClick] = useState(1);
-  const [tickRate] = useState(1000);
-  const [activeTab, setActiveTab] = useState('A');
+  const [gameMechanicUnlocked, setGameMechanicUnlocked] = useState(false);
+  const [upgradeCounter, setUpgradeCounter] = useState(0);
+  const [activeMainTab, setActiveMainTab] = useState('Letters');
+  const [activeLetterTab, setActiveLetterTab] = useState('A');
   const [unlockedTabs, setUnlockedTabs] = useState(['A']);
   const goal = 100000;
 
@@ -22,16 +23,16 @@ function App() {
         }
         return newPoints;
       });
-    }, tickRate);
+    }, 1000);
     return () => clearInterval(interval);
-  }, [tickRate, points]);
+  }, [gameMechanicUnlocked, points]);
 
   const increment = () => {
-    setPoints([points[0] + pointsPerClick, ...points.slice(1)]);
+    setPoints((currentPoints) => [currentPoints[0] + 1, ...currentPoints.slice(1)]);
   };
 
   const upgradePoints = (index) => {
-    if (points[index] >= 10) {
+    if (index < points.length - 1 && points[index] >= 10) {
       let newPoints = [...points];
       newPoints[index] -= 10;
       newPoints[index + 1] += 1;
@@ -44,12 +45,58 @@ function App() {
     return Math.min(100, (currentAPoints / goal) * 100);
   };
 
+  const unlockGameMechanic = () => {
+    setGameMechanicUnlocked(true);
+    setUpgradeCounter(upgradeCounter + 1);
+    setActiveMainTab('Upgrades'); // Automatically switch to Upgrades tab upon unlocking
+    setPoints([0]);
+    setUnlockedTabs(['A']); // Reset unlocked tabs to only 'A' initially
+  };
+
+  const renderMainTabs = () => (
+    <>
+      <button onClick={() => setActiveMainTab('Letters')}>Letters</button>
+      {gameMechanicUnlocked && <button onClick={() => setActiveMainTab('Upgrades')}>Upgrades</button>}
+    </>
+  );
+
+  const renderLetterTabs = () => (
+    <>
+      {unlockedTabs.map((letter) => (
+        <button key={letter} onClick={() => setActiveLetterTab(letter)}>
+          {letter}
+        </button>
+      ))}
+    </>
+  );
+
+  const renderUpgradesTab = () => (
+    <div>
+      <h2>Upgrades</h2>
+      <p>Upgrade Counter: {upgradeCounter}</p>
+      {/* Future upgrade options will go here */}
+    </div>
+  );
+
   return (
     <div>
       <h1>Incremental Game</h1>
       <ProgressBar progress={getProgress()} />
-      <Tabs unlockedTabs={unlockedTabs} setActiveTab={setActiveTab} />
-      <TabContent tab={activeTab} points={points} increment={increment} upgradePoints={upgradePoints} unlockNextType={() => unlockNextType(points, points.length - 1, setPoints, setUnlockedTabs)} />
+      {getProgress() >= 100 && !gameMechanicUnlocked && (
+        <button onClick={unlockGameMechanic}>Unlock new Game Mechanic</button>
+      )}
+      <div>{renderMainTabs()}</div>
+      <div>{activeMainTab === 'Letters' && renderLetterTabs()}</div>
+      <div>{activeMainTab === 'Letters' && (
+        <TabContent 
+          tab={activeLetterTab} 
+          points={points} 
+          increment={increment} 
+          unlockNextType={() => unlockNextType(points, points.length - 1, setPoints, setUnlockedTabs)} 
+          upgradePoints={upgradePoints} 
+        />
+      )}
+      {activeMainTab === 'Upgrades' && renderUpgradesTab()}</div>
     </div>
   );
 }
