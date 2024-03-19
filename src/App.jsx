@@ -9,8 +9,9 @@ function App() {
   const [upgradePoints, setUpgradePoints] = useState(0);
   const [tickSpeed, setTickSpeed] = useState(1000);
   const [tickSpeedCost, setTickSpeedCost] = useState(1);
-  // const [gameMechanicUnlocked, setGameMechanicUnlocked] = useState(false);
   const [isUpgradeMechanicUnlocked, setUpgradeMechanicUnlocked] = useState(false);
+  const [nextLetterToUnlock, setNextLetterToUnlock] = useState('B');
+  const [unlockNextLetterCost, setUnlockNextLetterCost] = useState(10);
   const [activeMainTab, setActiveMainTab] = useState('Letters');
   const [activeLetterTab, setActiveLetterTab] = useState('A');
   const [unlockedTabs, setUnlockedTabs] = useState(['A']);
@@ -60,13 +61,34 @@ function App() {
       setUnlockedTabs(['A']); // Reset unlocked tabs to only 'A' initially
       setUpgradePoints(upgradePoints + 10); // Provide initial upgrade points
     } else {
-      // Once the mechanic is unlocked, this will handle generating upgrade points
-      setLetterPoints([0]); // Reset letter points
-      setUnlockedTabs(['A']); // Reset unlocked tabs to only 'A' initially
-      setUpgradePoints(upgradePoints + 10); // Increment upgrade points
+      generateUpgradePoints(); // Generate upgrade points without resetting the letters
     }
   };
   
+  const generateUpgradePoints = () => {
+    const basePoints = 100000; // Base point level for calculating upgrade points
+    const baseUpgradePoints = 10; // Base number of upgrade points to award
+  
+    // Calculate the total letter points
+    const totalLetterPoints = letterPoints.reduce((acc, points) => acc + points, 0);
+  
+    // Determine the multiplier based on total letter points
+    let multiplier = Math.log10(totalLetterPoints / basePoints);
+  
+    // Ensure multiplier is at least 0 (no negative upgrade points)
+    multiplier = Math.max(0, multiplier);
+  
+    // Calculate the number of upgrade points to award
+    const pointsToAward = Math.floor(baseUpgradePoints + multiplier);
+  
+    // Add the calculated points to the current upgrade points
+    setUpgradePoints(upgradePoints + pointsToAward);
+  
+    // Reset letter points and tabs to simulate starting a new "dimension"
+    setLetterPoints([0]); // Reset letter points to start with A only
+    setUnlockedTabs(['A']); // Reset unlocked tabs to only 'A' initially
+  };
+
 
   const upgradeTickSpeed = () => {
     if (upgradePoints >= tickSpeedCost) {
@@ -75,6 +97,30 @@ function App() {
       setTickSpeedCost(prevCost => prevCost * 2);
     }
   };
+
+  const purchaseUnlockNextLetterUpgrade = () => {
+    if (upgradePoints >= unlockNextLetterCost) {
+      setUpgradePoints(upgradePoints - unlockNextLetterCost);
+      let newLetterPoints = [...letterPoints];
+      let newUnlockedTabs = [...unlockedTabs];
+  
+      // Check if the letter is already unlocked (to avoid re-unlocking)
+      const nextLetterIndex = nextLetterToUnlock.charCodeAt(0) - 65;
+      if (!newLetterPoints[nextLetterIndex]) {
+        newLetterPoints[nextLetterIndex] = 1; // Initialize the next letter with 1 point
+        newUnlockedTabs.push(nextLetterToUnlock); // Add the next letter to unlocked tabs
+      }
+  
+      setLetterPoints(newLetterPoints);
+      setUnlockedTabs(newUnlockedTabs);
+  
+      // Prepare for the next letter and increase the cost
+      const nextLetter = String.fromCharCode(nextLetterToUnlock.charCodeAt(0) + 1);
+      setNextLetterToUnlock(nextLetter);
+      setUnlockNextLetterCost(unlockNextLetterCost * 10);
+    }
+  };
+  
 
   const renderMainTabs = () => (
     <>
@@ -93,43 +139,54 @@ function App() {
 //    </>
 //  );
 
-  const renderUpgradesTab = () => (
+const renderUpgradesTab = () => {
+  return (
     <div>
       <h2>Upgrades</h2>
       <p>Upgrade Points: {upgradePoints}</p>
       <button onClick={upgradeTickSpeed} disabled={upgradePoints < tickSpeedCost}>
         Upgrade Tick Speed (Cost: {tickSpeedCost} Upgrade Points)
       </button>
+      <button onClick={purchaseUnlockNextLetterUpgrade} disabled={upgradePoints < unlockNextLetterCost || letterPoints[nextLetterToUnlock.charCodeAt(0) - 65]}>
+        Permanently unlock {nextLetterToUnlock} (Cost: {unlockNextLetterCost} Upgrade Points)
+      </button>
       {/* Future upgrades can be added here */}
     </div>
   );
+};
 
-  return (
-    <div>
-      <h1>Incremental Game</h1>
-      <ProgressBar progress={getProgress()} />
-      <div>{getProgress() >= 100 && (
-        <button onClick={unlockGameMechanic}>
-          {isUpgradeMechanicUnlocked ? "Generate Upgrade Points" : "Unlock new Game Mechanic"}
-        </button>
-      )}</div>
-      {renderMainTabs()}
-      {activeMainTab === 'Letters' && (
-        <>
-          <Tabs unlockedTabs={unlockedTabs} setActiveTab={setActiveLetterTab} />
-          <TabContent 
-            tab={activeLetterTab} 
-            letterPoints={letterPoints} 
-            increment={incrementLetterPoints}
-            buyNextPointType={(index) => buyNextPointType(letterPoints, index, setLetterPoints)}
-            unlockNextType={() => unlockNextType(letterPoints, letterPoints.length - 1, setLetterPoints, setUnlockedTabs)}
-          />
-        </>
-      )}
-      {activeMainTab === 'Upgrades' && renderUpgradesTab()}
-    </div>
-  );
-  
+return (
+  <div>
+    <h1>Incremental Game</h1>
+    <ProgressBar progress={getProgress()} />
+    {getProgress() >= 100 && !isUpgradeMechanicUnlocked && (
+      <button onClick={unlockGameMechanic}>Unlock new Dimension</button>
+    )}
+    {getProgress() >= 100 && isUpgradeMechanicUnlocked && (
+      <div>
+        <button onClick={generateUpgradePoints}>Generate Upgrade Points</button>
+        <p>Points to be generated: {
+          Math.floor(10 + Math.max(0, Math.log10(letterPoints.reduce((acc, points) => acc + points, 0) / 100000)))
+        }</p>
+      </div>
+    )}
+    {renderMainTabs()}
+    {activeMainTab === 'Letters' && (
+      <>
+        <Tabs unlockedTabs={unlockedTabs} setActiveTab={setActiveLetterTab} />
+        <TabContent 
+          tab={activeLetterTab} 
+          letterPoints={letterPoints} 
+          increment={incrementLetterPoints}
+          buyNextPointType={(index) => buyNextPointType(letterPoints, index, setLetterPoints)}
+          unlockNextType={() => unlockNextType(letterPoints, letterPoints.length - 1, setLetterPoints, setUnlockedTabs)}
+        />
+      </>
+    )}
+    {activeMainTab === 'Upgrades' && renderUpgradesTab()}
+  </div>
+);
+
 }
 
 export default App;
