@@ -1,7 +1,7 @@
 # Incremental Game
 
 ## How it works
-Just click the "Generate A Points" button and start generating A Points, with which you can buy B Points.
+Just click the "Generate A Points" button and start generating A Points, with which you can buy B Points. B Points will generate A Points. Content will go up to Z and there is currently one more Dimension besides Letters.
 
 ## Any tips? 
 - 1 B Point costs 10 A Points and so on
