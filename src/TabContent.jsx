@@ -1,17 +1,21 @@
 import React from 'react';
 
-function TabContent({ tab, points, increment, upgradePoints, unlockNextType }) {
+function TabContent({ tab, letterPoints, increment, buyNextPointType, unlockNextType }) {
   const index = tab.charCodeAt(0) - 65;
+  const letterPoint = letterPoints && letterPoints.length > index ? letterPoints[index] : 0;
+
   return (
     <div>
-      <h2>{tab} Points: {points[index]}</h2>
-      {index === 0 && <button onClick={increment}>Increment Type A Points</button>}
+      <h2>{tab} Points: {letterPoint}</h2>
+      {index === 0 && (
+        <button onClick={increment}>Click to generate A Points</button>
+      )}
       {index > 0 && (
-        <button onClick={() => upgradePoints(index - 1)} disabled={points[index - 1] < 10}>
+        <button onClick={() => buyNextPointType(index)} disabled={letterPoints[index - 1] < 10}>
           Buy {String.fromCharCode(65 + index)} Points
         </button>
       )}
-      {index === points.length - 1 && points[index] >= 10 && (
+      {index === letterPoints.length - 1 && letterPoint >= 10 && (
         <button onClick={() => unlockNextType(index)}>Unlock {String.fromCharCode(66 + index)}!</button>
       )}
     </div>

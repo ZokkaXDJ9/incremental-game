@@ -5,7 +5,7 @@ function Tabs({ unlockedTabs, setActiveTab }) {
     <div>
       {unlockedTabs.map((tab, index) => (
         <button key={index} onClick={() => setActiveTab(tab)}>
-          Type {tab}
+          {tab}
         </button>
       ))}
     </div>
